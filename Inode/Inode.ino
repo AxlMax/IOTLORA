@@ -105,11 +105,16 @@ void sendMsg() {
     
     String datas = Serial2.readString();
 
-    sensorReturn valueArray = Values(datas);
+    for(int i = 0; i < 5; i++){
+      sensorReturn valueArray = Values(datas);
 
-    for(int i = 0; i< numNodes - 2 ; i++){
-      Serial.println(valueArray.arr[i]);
+      for(int j = 0; j< numNodes - 2 ; j++){
+        Serial.println(valueArray.arr[j]);
+      }
+      datas = datas.substring(datas.indexOf(",") + 1, datas.length());
     }
+
+
     
     sizeDatas = datas.length() + 1;
     String cut = datas.substring(
@@ -146,7 +151,7 @@ void reconnect() {
 }
 
 
-struct sensorReturn Values(String datas){
+sensorReturn Values(String datas){
   
     int initial = datas.indexOf('[') + 1;
     int Final = datas.indexOf(']');
