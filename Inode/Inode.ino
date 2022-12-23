@@ -29,7 +29,9 @@ const char* mqttPassword = "test";
 // variables de librerias
 WiFiClient espClient;
 PubSubClient client(espClient);
-DynamicJsonDocument doc(1024);
+
+#define MaxBuffer 400
+char BufferJson[MaxBuffer];
 
 const char* messageTest = "{\"T\":20,\"U\":20,\"H\":20,\"L\":20}";
 const char* topicTest   = "testingTopic";
@@ -39,6 +41,14 @@ void conectWifi();
 void sendMsg();
 
 bool initflag;
+
+int numNodes = 3;
+
+struct sensorReturn{
+  String arr[numNodes - 2];
+}
+
+struct sensorReturn Values(String);
 
 void setup() {
   Serial2.begin(115200, SERIAL_8N1, RXD2, TXD2);
@@ -104,7 +114,6 @@ void sendMsg() {
     Serial.println(values);
 
     int cont = 1;
-    Serial.println(values.indexOf(','));
 
     while(values.indexOf(',') != -1){
       cont++;
@@ -116,13 +125,22 @@ void sendMsg() {
       if(values.indexOf(',') == -1){
         valuesArray[i] = values 
       }else{
-        String valuesAux = values.substring(0,values.indexOf(',') - 1)
-        values[i] = valuesAux;
-        values = values.substring(values.indexOf(',') + 1, values.length()) 
+        //String valuesAux = values.substring(0,values.indexOf(',') - 1)
+        //values[i] = valuesAux;
+        //values = values.substring(values.indexOf(',') + 1, values.length()) 
       }
     }
 
-    Serial.println(valuesArray);
+
+
+
+
+
+
+
+
+
+
 
     sizeDatas = datas.length() + 1;
     String cut = datas.substring(
