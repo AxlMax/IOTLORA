@@ -1,5 +1,6 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
+#include <ArduinoJson.h>
 
 #define FREQ 115200
 #define RXD2 16
@@ -22,9 +23,10 @@ const int mqttPort = 1883;
 const char* mqttUser = "test";
 const char* mqttPassword = "test";
 
-
+// variables de librerias
 WiFiClient espClient;
 PubSubClient client(espClient);
+DynamicJsonDocument doc(1024);
 
 const char* messageTest = "{\"T\":20,\"U\":20,\"H\":20,\"L\":20}";
 const char* topicTest   = "testingTopic";
@@ -40,7 +42,7 @@ void setup() {
   Serial.begin(FREQ);
   client.setServer(mqttServer, 1883);
   initflag = true;
-  
+
   conectWifi();
 }
 
@@ -51,65 +53,68 @@ void loop() {
   }
   client.loop();
 
-  
+
   //client.publish(topicTest, messageTest); // probar la comunicacion mqtt broker
 
   // para iniciar el proceso de envio de datos en el servidor
-  if(initflag){
-    client.publish(topicInit,"init");
+  if (initflag) {
+    client.publish(topicInit, "init");
     initflag = false;
   }
-  
-  
-  for(int i = 0; i < NUMSG; i++){
-     // se envian tres mensajes
-     sendMsg(); // para enviar los datos a mqtt
-     delay(SEC);
+
+
+  for (int i = 0; i < NUMSG; i++) {
+    // se envian tres mensajes
+    sendMsg(); // para enviar los datos a mqtt
+    delay(SEC);
   }
-  
- 
+
+
 }
 
-void conectWifi(){
-  
+void conectWifi() {
+
   WiFi.begin(ssid, password);
   Serial.println("...................................");
 
   Serial.print("intentando conectarse a la red");
   while (WiFi.status() != WL_CONNECTED)
-  {  delay(500);
+  { delay(500);
     Serial.print(".") ;
   }
   Serial.println("conectado");
 }
 
-void sendMsg(){
-   if (Serial2.available() > 0) {
-    String datas = Serial2.readString();
-    sizeDatas = datas.length()+1;
-    String cut = datas.substring(
-      datas.indexOf("{"), 
-      datas.indexOf("}") + 1   
-      );
-      
-    char charBuf[sizeDatas];
+void sendMsg() {
+  
+  if (Serial2.available() > 0) {
+    // llego la informacion
     
+    String datas = Serial2.readString();
+    sizeDatas = datas.length() + 1;
+    String cut = datas.substring(
+                   datas.indexOf("{"),
+                   datas.indexOf("}") + 1
+                 );
+
+    char charBuf[sizeDatas];
+
     cut.toCharArray(charBuf, sizeDatas);
     client.publish(topicTest, charBuf);
-    
+
     Serial.print("data:");
     Serial.println(cut);
-    
-  }  
+
+  }
 }
 
 
-void reconnect() { 
+void reconnect() {
   while (!client.connected()) {
-      delay(2000);
+    delay(2000);
     if (client.connect("ESP8266Client", mqttUser, mqttPassword)) {
-        Serial.println("conexion exitosa");
-        delay(1000);
+      Serial.println("conexion exitosa");
+      delay(1000);
     } else {
       Serial.print("FALLO, rc=");
       Serial.print(client.state());

@@ -1,5 +1,3 @@
-// Developer Ing Axsel Garcia 15-11-2022
-
 //librerias
 #include <ArduinoJson.h>
 #include "DHT.h"
@@ -63,12 +61,18 @@ void loop() {
   if (alarmFlag == true) {
     digitalWrite(LED_BUILTIN, HIGH);
     digitalWrite(PIN_ATN, HIGH);
+
+    // darle tiempo a los sensores y a la antena para acoplarse al transistor
     delay(10000);
     buildBuffer();
     buildMessage();
+    
+    // enviar el mensaje y verlo por terminal serial
     Serial.println(message);
     Serial1.println(message);
-    alarmFlag = false;  // Clear flag
+
+    //limpiar la bandera 
+    alarmFlag = false;
     delay(3000);
   }
 
