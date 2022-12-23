@@ -42,13 +42,13 @@ void sendMsg();
 
 bool initflag;
 
-int numNodes = 3;
+const int numNodes = 3;
 
-struct sensorReturn{
+typedef struct{
   String arr[numNodes - 2];
-}
+}sensorReturn;
 
-struct sensorReturn Values(String);
+sensorReturn Values(String);
 
 void setup() {
   Serial2.begin(115200, SERIAL_8N1, RXD2, TXD2);
@@ -105,7 +105,7 @@ void sendMsg() {
     
     String datas = Serial2.readString();
 
-    struct sensorReturn valueArray = Values(datas);
+    sensorReturn valueArray = Values(datas);
 
     for(int i = 0; i< numNodes - 2 ; i++){
       Serial.println(valueArray.arr[i]);
@@ -162,7 +162,7 @@ struct sensorReturn Values(String datas){
       cont++;
     }
 
-    struct sensorReturn valuesArray;
+    sensorReturn valuesArray;
 
     for(int i= 0; i < cont ; i++){
       if(values.indexOf(',') == -1){
