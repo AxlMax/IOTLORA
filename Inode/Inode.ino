@@ -95,13 +95,34 @@ void sendMsg() {
     
     String datas = Serial2.readString();
 
-    int initial = datas.indexOf('[');
+    int initial = datas.indexOf('[') + 1;
     int Final = datas.indexOf(']');
 
-    String values = data.substring(initial,Final);
+    String values = datas.substring(initial,Final);
 
     Serial.print("datos indexados id :");
     Serial.println(values);
+
+    int cont = 1;
+    Serial.println(values.indexOf(','));
+
+    while(values.indexOf(',') != -1){
+      cont++;
+    }
+
+    String valuesArray[cont];
+
+    for(int i= 0 i < cont ; i++){
+      if(values.indexOf(',') == -1){
+        valuesArray[i] = values 
+      }else{
+        String valuesAux = values.substring(0,values.indexOf(',') - 1)
+        values[i] = valuesAux;
+        values = values.substring(values.indexOf(',') + 1, values.length()) 
+      }
+    }
+
+    Serial.println(valuesArray);
 
     sizeDatas = datas.length() + 1;
     String cut = datas.substring(
