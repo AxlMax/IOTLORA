@@ -30,6 +30,7 @@ const char* mqttPassword = "test";
 // variables de librerias
 WiFiClient espClient;
 PubSubClient client(espClient);
+DHT dht(DHTPIN, DHTTYPE);
 
 // Constantes de librerias
 #define DHTPIN 3
