@@ -95,18 +95,14 @@ void sendMsg() {
     
     String datas = Serial2.readString();
 
-    deserializeJson(doc, datas);
-    JsonObject obj = doc.as<JsonObject>();
+    int initial = datas.indexOf('[');
+    int Final = datas.indexOf(']');
 
-    obj["id"].add(LORAKEY);
-    obj["H"].add(25);
-    obj["L"].add(25);
-    obj["T"].add(25);
-    obj["U"].add(25);
+    String values = data.substring(initial,Final);
 
-    String output;
-    serializeJson(doc, output);
-  
+    Serial.print("datos indexados id :");
+    Serial.println(values);
+
     sizeDatas = datas.length() + 1;
     String cut = datas.substring(
                    datas.indexOf("{"),
@@ -121,10 +117,6 @@ void sendMsg() {
     // datos que llegan de la primera antena
     Serial.print("dataCome:");
     Serial.println(cut);
-
-    // datos de la segunda antena junto a los de la primera
-    Serial.print("dataJoined:");
-    Serial.println(output);
     
   }
 }
