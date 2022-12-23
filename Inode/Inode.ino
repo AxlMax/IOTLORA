@@ -102,6 +102,8 @@ void sendMsg() {
   
   if (Serial2.available() > 0) {
     // llego la informacion
+
+    StaticJsonDocument<400> doc;
     
     String datas = Serial2.readString();
 
@@ -115,21 +117,29 @@ void sendMsg() {
                datas.indexOf("}") + 1
              );
 
+    String order[] = ["id","T","H","U","L"]
+
     for(int i = 0; i < 5; i++){
-      Serial.println(datas);
+      
       sensorReturn valueArray = Values(datas);
+  
+      JsonArray space = doc.createNestedArray(order[i]);
 
       for(int j = 0; j< numNodes - 2 ; j++){
-        Serial.print("dato obtenido:");
-        Serial.println(valueArray.arr[j]);
+        space.add(valueArray.arr[j]);
       }
+
+      space.add(10);
+      serializeJson(doc, BufferJson);
       
       datas = datas.substring(datas.indexOf(",") + 1, datas.length());
     }
 
 
-    
+    Buffer = String(BufferJson);
     sizeDatas = datas.length() + 1;
+
+    Serial.println(Buffer);
  
     char charBuf[sizeDatas];
 
