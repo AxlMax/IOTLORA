@@ -106,11 +106,14 @@ void sendMsg() {
     String datas = Serial2.readString();
 
     for(int i = 0; i < 5; i++){
+      Serial.println(datas);
       sensorReturn valueArray = Values(datas);
 
       for(int j = 0; j< numNodes - 2 ; j++){
+        Serial.print("dato obtenido:")
         Serial.println(valueArray.arr[j]);
       }
+      
       datas = datas.substring(datas.indexOf(",") + 1, datas.length());
     }
 
@@ -157,10 +160,7 @@ sensorReturn Values(String datas){
     int Final = datas.indexOf(']');
 
     String values = datas.substring(initial,Final);
-
-    Serial.print("datos indexados id :");
-    Serial.println(values);
-
+    
     int cont = 1;
 
     while(values.indexOf(',') != -1){
@@ -179,5 +179,5 @@ sensorReturn Values(String datas){
       }
     }
 
-    return sensorReturn
+    return valuesArray;
 }
