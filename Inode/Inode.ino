@@ -8,6 +8,9 @@
 #define SEC 1000
 #define NUMSG 4
 
+// contantes del sensor
+const char* LORAKEY = "STest";
+
 int sizeDatas = 0;
 
 // cambiar estos dos valores cada vez que se cambia de red
@@ -91,6 +94,19 @@ void sendMsg() {
     // llego la informacion
     
     String datas = Serial2.readString();
+
+    deserializeJson(doc, datas);
+    JsonObject obj = doc.as<JsonObject>();
+
+    obj["id"].add(LORAKEY);
+    obj["H"].add(25);
+    obj["L"].add(25);
+    obj["T"].add(25);
+    obj["U"].add(25);
+
+    String output;
+    serializeJson(doc, output);
+  
     sizeDatas = datas.length() + 1;
     String cut = datas.substring(
                    datas.indexOf("{"),
@@ -102,9 +118,14 @@ void sendMsg() {
     cut.toCharArray(charBuf, sizeDatas);
     client.publish(topicTest, charBuf);
 
-    Serial.print("data:");
+    // datos que llegan de la primera antena
+    Serial.print("dataCome:");
     Serial.println(cut);
 
+    // datos de la segunda antena junto a los de la primera
+    Serial.print("dataJoined:");
+    Serial.println(output);
+    
   }
 }
 
