@@ -105,12 +105,22 @@ void sendMsg() {
     
     String datas = Serial2.readString();
 
+    datas = datas.substring(
+               datas.indexOf("{"),
+               datas.indexOf("}") + 1
+             );
+
+   String cut = datas.substring(
+               datas.indexOf("{"),
+               datas.indexOf("}") + 1
+             );
+
     for(int i = 0; i < 5; i++){
       Serial.println(datas);
       sensorReturn valueArray = Values(datas);
 
       for(int j = 0; j< numNodes - 2 ; j++){
-        Serial.print("dato obtenido:")
+        Serial.print("dato obtenido:");
         Serial.println(valueArray.arr[j]);
       }
       
@@ -120,11 +130,7 @@ void sendMsg() {
 
     
     sizeDatas = datas.length() + 1;
-    String cut = datas.substring(
-                   datas.indexOf("{"),
-                   datas.indexOf("}") + 1
-                 );
-
+ 
     char charBuf[sizeDatas];
 
     cut.toCharArray(charBuf, sizeDatas);
