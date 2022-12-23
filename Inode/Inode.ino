@@ -105,43 +105,12 @@ void sendMsg() {
     
     String datas = Serial2.readString();
 
-    int initial = datas.indexOf('[') + 1;
-    int Final = datas.indexOf(']');
+    struct sensorReturn valueArray = Values(datas);
 
-    String values = datas.substring(initial,Final);
-
-    Serial.print("datos indexados id :");
-    Serial.println(values);
-
-    int cont = 1;
-
-    while(values.indexOf(',') != -1){
-      cont++;
+    for(int i = 0; i< numNodes - 2 ; i++){
+      Serial.println(valueArray.arr[i]);
     }
-
-    String valuesArray[cont];
-
-    for(int i= 0 i < cont ; i++){
-      if(values.indexOf(',') == -1){
-        valuesArray[i] = values 
-      }else{
-        //String valuesAux = values.substring(0,values.indexOf(',') - 1)
-        //values[i] = valuesAux;
-        //values = values.substring(values.indexOf(',') + 1, values.length()) 
-      }
-    }
-
-
-
-
-
-
-
-
-
-
-
-
+    
     sizeDatas = datas.length() + 1;
     String cut = datas.substring(
                    datas.indexOf("{"),
@@ -174,4 +143,36 @@ void reconnect() {
       delay(1000);
     }
   }
+}
+
+
+struct sensorReturn Values(String datas){
+  
+    int initial = datas.indexOf('[') + 1;
+    int Final = datas.indexOf(']');
+
+    String values = datas.substring(initial,Final);
+
+    Serial.print("datos indexados id :");
+    Serial.println(values);
+
+    int cont = 1;
+
+    while(values.indexOf(',') != -1){
+      cont++;
+    }
+
+    struct sensorReturn valuesArray;
+
+    for(int i= 0; i < cont ; i++){
+      if(values.indexOf(',') == -1){
+        valuesArray.arr[i] = values; 
+      }else{
+        //String valuesAux = values.substring(0,values.indexOf(',') - 1)
+        //values[i] = valuesAux;
+        //values = values.substring(values.indexOf(',') + 1, values.length()) 
+      }
+    }
+
+    return sensorReturn
 }
