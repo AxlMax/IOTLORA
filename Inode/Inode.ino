@@ -1,6 +1,7 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
+#include "DHT.h"
 
 #define FREQ 115200
 #define RXD2 16
@@ -9,7 +10,7 @@
 #define NUMSG 4
 
 // contantes del sensor
-const char* LORAKEY = "STest";
+const char* LORAKEY = "antena1";
 
 int sizeDatas = 0;
 
@@ -30,8 +31,9 @@ const char* mqttPassword = "test";
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-#define MaxBuffer 400
-char BufferJson[MaxBuffer];
+// Constantes de librerias
+#define DHTPIN 3
+#define DHTTYPE DHT11
 
 const char* messageTest = "{\"T\":20,\"U\":20,\"H\":20,\"L\":20}";
 const char* topicTest   = "testingTopic";
@@ -51,6 +53,12 @@ typedef struct{
 sensorReturn Values(String);
 
 void setup() {
+
+  dht.begin();
+
+  delay(3000);
+
+  
   Serial2.begin(115200, SERIAL_8N1, RXD2, TXD2);
   Serial.begin(FREQ);
   client.setServer(mqttServer, 1883);
@@ -117,7 +125,7 @@ void sendMsg() {
                datas.indexOf("}") + 1
              );
 
-    String order[] = ["id","T","H","U","L"]
+    String order[] = {"id","T","H","U","L"};
 
     for(int i = 0; i < 5; i++){
       
@@ -129,14 +137,34 @@ void sendMsg() {
         space.add(valueArray.arr[j]);
       }
 
-      space.add(10);
+      if(order[i] == "id"){
+         space.add(LORAKEY);
+      }
+
+      if(order[i] == "H"){
+         space.add(dht.readHumidity());
+      }
+
+      if(order[i] == "T"){
+         space.add(dht.readTemperature());
+      }
+
+      if(order[i] == "U"){
+         space.add(map(analogRead(HumedadPin), 0, 1023, 100, 0));
+      }
+
+      if(order[i] == "L"){
+         space.add(analogRead(LuxPin));
+      }
+
+      
       serializeJson(doc, BufferJson);
       
       datas = datas.substring(datas.indexOf(",") + 1, datas.length());
     }
 
 
-    Buffer = String(BufferJson);
+    String Buffer = String(BufferJson);
     sizeDatas = datas.length() + 1;
 
     Serial.println(Buffer);
