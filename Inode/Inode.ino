@@ -1,28 +1,56 @@
+// librerias
 #include <ArduinoJson.h>
 #include "DHT.h"
+#include <RTCZero.h>
 
+// constantes
 #define FREQ 115200
 #define RXD2 16
 #define TXD2 17
 #define SEC 1000
 #define NUMSG 4
-
-int sizeDatas = 0;
-
-DHT dht(DHTPIN, DHTTYPE);
+#define MaxBuffer 400
 
 // Constantes de librerias
 #define DHTPIN 3
 #define DHTTYPE DHT11
+#define PIN_ATN 10
+#define awakeTime 1
+
+
+// constantes de deepsleep
+const byte alarmSeconds = 10;
+const byte alarmMinutes = 0;
+const byte alarmHours = 0;
+
+volatile bool alarmFlag = false; // bandera de la alarma
+
+// variables globales
+const byte MINUTE = 60*SEC;
+
+String      MyLoraID      = "2";
+const char* LORAKEY       = "antena1"; 
+String      LORA_RECEIVER =  "3";         // id de la antena que recibira mi mensaje se cambia dependiendo de la arquitectura de comunicacion
+int         HumedadPin    =  A4;
+int         LuxPin        =  A5;
+String      Buffer        =  "";
+String      message       =  "";
+
+int sizeDatas = 0;
+
+DHT dht(DHTPIN, DHTTYPE);
+RTCZero zerortc;
 
 const char* messageTest = "{\"T\":20,\"U\":20,\"H\":20,\"L\":20}";
 
 const int numNodes = 3;
 
-const unsigned int MaxBuffer = 400;
-
 char BufferJson[MaxBuffer*(numNodes - 2)];
 
+
+
+// metodos
+void buildMessage();
 void sendMsg();
 
 typedef struct{
@@ -30,11 +58,6 @@ typedef struct{
 }sensorReturn;
 
 sensorReturn Values(String);
-
-// contantes del sensor
-const char* LORAKEY    = "antena1"; // como se encuentra registrada la antena en la base de datos
-const char* myNumber   = "2";       // numero de id de la antena
-const char  sendNumber = "3";       // numero de id de la antena a la que enviare la informacion    
 
 void setup() {
 
@@ -57,58 +80,75 @@ void sendMsg() {
   
   if (Serial2.available() > 0) {
     // llego la informacion
+    if (alarmFlag == true) {
+      
+      digitalWrite(LED_BUILTIN, HIGH);
+      digitalWrite(PIN_ATN, HIGH);
 
-    StaticJsonDocument<MaxBuffer*(numNodes - 2)> doc;
+      delay(10000);
     
-    String datas = Serial2.readString();
-
-    datas = datas.substring(
-               datas.indexOf("{"),
-               datas.indexOf("}") + 1
-             );
-
-    String order[]    = {"id","T","H","U","L"};
-
-    for(int i = 0; i < 5; i++){
+      StaticJsonDocument<MaxBuffer*(numNodes - 2)> doc;
       
-      sensorReturn valueArray = Values(datas);
+      String datas = Serial2.readString();
   
-      JsonArray space = doc.createNestedArray(order[i]);
-
-      for(int j = 0; j< numNodes - 2 ; j++){
-        space.add(valueArray.arr[j]);
+      datas = datas.substring(
+                 datas.indexOf("{"),
+                 datas.indexOf("}") + 1
+               );
+  
+      String order[]    = {"id","T","H","U","L"};
+  
+      for(int i = 0; i < 5; i++){
+        
+        sensorReturn valueArray = Values(datas);
+    
+        JsonArray space = doc.createNestedArray(order[i]);
+  
+        for(int j = 0; j< numNodes - 2 ; j++){
+          space.add(valueArray.arr[j]);
+        }
+  
+        if(order[i] == "id"){
+           space.add(LORAKEY);
+        }
+  
+        if(order[i] == "H"){
+           space.add(dht.readHumidity());
+        }
+  
+        if(order[i] == "T"){
+           space.add(dht.readTemperature());
+        }
+  
+        if(order[i] == "U"){
+           space.add(map(analogRead(HumedadPin), 0, 1023, 100, 0));
+        }
+  
+        if(order[i] == "L"){
+           space.add(analogRead(LuxPin));
+        }
+        
+        serializeJson(doc, BufferJson);
+        
+        datas = datas.substring(datas.indexOf(",") + 1, datas.length());
       }
-
-      if(order[i] == "id"){
-         space.add(LORAKEY);
-      }
-
-      if(order[i] == "H"){
-         space.add(dht.readHumidity());
-      }
-
-      if(order[i] == "T"){
-         space.add(dht.readTemperature());
-      }
-
-      if(order[i] == "U"){
-         space.add(map(analogRead(HumedadPin), 0, 1023, 100, 0));
-      }
-
-      if(order[i] == "L"){
-         space.add(analogRead(LuxPin));
-      }
+  
+      Buffer = String(BufferJson);
+      sizeDatas = datas.length() + 1;
       
-      serializeJson(doc, BufferJson);
+      Serial.println(Buffer);
       
-      datas = datas.substring(datas.indexOf(",") + 1, datas.length());
+      buildMessage();
+  
+      Serial.println(message);
+      Serial2.println(message);
+      
+      alarmFlag = false;
+      delay(3000);
+        
     }
 
-    String Buffer = String(BufferJson);
-    sizeDatas = datas.length() + 1;
-
-    Serial.println(Buffer);
-
+    sleep();
   }
 }
 
@@ -138,4 +178,46 @@ sensorReturn Values(String datas){
     }
 
     return valuesArray;
+}
+
+
+void buildMessage() {
+  String messageLen = (String)Buffer.length();
+  message = "AT+SEND=" + LORA_RECEIVER + "," + messageLen + "," + Buffer;
+}
+
+void initAlarm(void){
+  zerortc.begin(); 
+  resetAlarm(); 
+  zerortc.attachInterrupt(alarmMatch);   
+}
+
+void alarmMatch(void)
+{
+  alarmFlag = true; // Set flag
+}
+
+void resetAlarm(void) {
+  byte seconds = 0;
+  byte minutes = 0;
+  byte hours = 0;
+  byte day = 1;
+  byte month = 1;
+  byte year = 1;
+  
+  zerortc.setTime(hours, minutes, seconds);
+  zerortc.setDate(day, month, year);
+
+  zerortc.setAlarmTime(alarmHours, alarmMinutes, alarmSeconds);
+  zerortc.enableAlarm(zerortc.MATCH_HHMMSS);
+}
+
+void sleep(void){
+  
+  resetAlarm();  
+  
+  digitalWrite(LED_BUILTIN, LOW);
+  digitalWrite(PIN_ATN, LOW);
+  
+  zerortc.standbyMode();
 }

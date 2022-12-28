@@ -81,7 +81,7 @@ void loop() {
 // construccion del buffer apartir de las mediciones de los sensores
 
 void buildBuffer() {
-  StaticJsonDocument<400> doc;
+  StaticJsonDocument<MaxBuffer> doc;
 
   JsonArray space = doc.createNestedArray("id");
   space.add(LORAKEY);
